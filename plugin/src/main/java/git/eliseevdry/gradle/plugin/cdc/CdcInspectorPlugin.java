@@ -3,17 +3,49 @@
  */
 package git.eliseevdry.gradle.plugin.cdc;
 
-import org.gradle.api.Project;
+import git.eliseevdry.gradle.plugin.cdc.processor.CommentProcessor;
+import groovy.lang.Closure;
+import org.gradle.api.Action;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import spoon.Launcher;
+import spoon.SpoonAPI;
+import spoon.reflect.CtModel;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A simple 'hello world' plugin.
  */
 public class CdcInspectorPlugin implements Plugin<Project> {
     public void apply(Project project) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("description", "Task for inspection src directory");
+        map.put("group", "cdc");
+        map.put("type", DefaultTask.class);
+        project.task(map, "inspect", Closure.IDENTITY);
+
+
+
+        SpoonAPI spoon = new Launcher();
+
+        spoon.addProcessor(new CommentProcessor(true, true, true));
+        spoon.addInputResource("src/main/java/");
+        spoon.buildModel();
+
+
         // Register a task
-        project.getTasks().register("greeting", task -> {
-            task.doLast(s -> System.out.println("Hello from plugin 'git.eliseevdry.gradle.plugin.cdc.greeting'"));
-        });
+        greetingTask(project);
+    }
+
+    private static void greetingTask(Project project) {
+        Action<Task> greetingTaskAction = task -> {
+            Action<Task> firstAction = s -> System.out.println("Hello from plugin 'git.eliseevdry.gradle.plugin.cdc.greeting'");
+            task.doLast(firstAction);
+        };
+        project.getTasks().register("greeting", greetingTaskAction);
     }
 }
